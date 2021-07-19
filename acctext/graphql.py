@@ -49,6 +49,61 @@ delete_document_plan = """mutation deleteDocumentPlan($id: ID!) {
 }
 """
 
+get_data_file = """query getDataFile($id: ID!, $recordOffset: Int, $recordLimit: Int) {
+  getDataFile(id: $id, recordOffset: $recordOffset, recordLimit: $recordLimit) {
+    id
+    fileName
+    fieldNames
+    records {
+      id
+      fields {
+        id
+        fieldName
+        value
+      }
+    }
+    recordOffset
+    recordLimit
+    recordCount
+  }
+}
+"""
+
+list_data_files = """query listDataFiles(
+  $offset: Int
+  $limit: Int
+  $recordOffset: Int
+  $recordLimit: Int
+) {
+  listDataFiles(
+    offset: $offset
+    limit: $limit
+    recordOffset: $recordOffset
+    recordLimit: $recordLimit
+  ) {
+    offset
+    limit
+    totalCount
+    dataFiles {
+      id
+      fileName
+      fieldNames
+      records {
+        id
+        fields {
+          id
+          fieldName
+          value
+        }
+      }
+      recordOffset
+      recordLimit
+      recordCount
+    }
+  }
+}
+"""
+
 dictionary = """query dictionary {
     dictionary {
         items {

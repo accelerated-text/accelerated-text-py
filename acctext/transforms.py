@@ -21,3 +21,15 @@ def document_plan(x: Dict):
     else:
         x['documentPlan'] = json.loads(x['documentPlan'])
         return x
+
+
+def data_file(x: Dict):
+    if not x:
+        return
+    else:
+        return {"id": x['id'],
+                "filename": x['fileName'],
+                "header": x['fieldNames'],
+                "rows": [[field['value'] for field in sorted(record['fields'],
+                                                             key=lambda f: x['fieldNames'].index(f['fieldName']))]
+                         for record in x['records']]}
