@@ -3,6 +3,7 @@ create_dictionary_item = """mutation CreateDictionaryItem($id: ID, $name: String
         id
         name
         partOfSpeech
+        language
         phrases {
             text
         }
@@ -54,17 +55,13 @@ dictionary = """query dictionary {
             id
             name
             partOfSpeech
+            language
             phrases {
-                id
                 text
-                defaultUsage
-                readerFlagUsage {
-                    id
-                    usage
-                    flag {
-                        id
-                        name
-                    }
+                }
+            attributes {
+                name
+                value
                 }
             }
         }
@@ -113,6 +110,7 @@ get_dictionary_item = """query dictionaryItem(
         id
         name
         partOfSpeech
+        language
         phrases {
             text
         }

@@ -9,6 +9,7 @@ from typing import Dict, Iterable, List, Any, Callable
 from collections import OrderedDict
 from acctext.graphql import (create_dictionary_item, create_document_plan, delete_dictionary_item,
                              delete_document_plan, dictionary, document_plan, document_plans, get_dictionary_item)
+from acctext.transforms import dictionary_item
 
 
 class AcceleratedText:
@@ -111,7 +112,7 @@ class AcceleratedText:
         body = {"operationName": "getDictionaryItem",
                 "query": get_dictionary_item,
                 "variables": {"dictionaryItemId": id}}
-        return self._graphql(body)
+        return self._graphql(body, transform=dictionary_item)
 
     def delete_dictionary_item(self, id):
         body = {"operationName": "deleteDictionaryItem",
@@ -122,7 +123,7 @@ class AcceleratedText:
     def list_dictionary_items(self):
         body = {"operationName": "dictionary",
                 "query": dictionary}
-        return self._graphql(body)
+        return self._graphql(body, transform=lambda x: [dictionary_item(item) for item in x['items']])
 
     def get_document_plan(self, id: str = None, name: str = None):
         body = {"operationName": "documentPlan",
