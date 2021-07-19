@@ -7,8 +7,8 @@ import time
 from urllib.parse import urljoin
 from typing import Dict, Iterable, List, Any
 from collections import OrderedDict
-from graphql import (create_dictionary_item, create_document_plan, delete_dictionary_item, delete_document_plan,
-                     dictionary, document_plan, document_plans, get_dictionary_item)
+from acctext.graphql import (create_dictionary_item, create_document_plan, delete_dictionary_item,
+                             delete_document_plan, dictionary, document_plan, document_plans, get_dictionary_item)
 
 
 class AcceleratedText:

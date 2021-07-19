@@ -1,1 +1,1 @@
-from core import AcceleratedText
+from acctext.core import AcceleratedText
