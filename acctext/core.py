@@ -106,7 +106,7 @@ class AcceleratedText:
                               "forms": forms,
                               "language": language,
                               "attributes": [{"name": k, "value": v} for k, v in attributes.items()]}}
-        return self._graphql(body)
+        return self._graphql(body, transform=dictionary_item)
 
     def get_dictionary_item(self, id: str):
         body = {"operationName": "getDictionaryItem",
