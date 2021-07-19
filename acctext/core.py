@@ -94,12 +94,12 @@ class AcceleratedText:
         return self._response(r)
 
     def create_dictionary_item(self, key: str, category: str, forms: List[str],
-                               language: str = "Eng", attributes: Dict[str, Any] = None):
+                               id: str = None, language: str = "Eng", attributes: Dict[str, Any] = None):
         if not attributes:
             attributes = {}
         body = {"operationName": "createDictionaryItem",
                 "query": create_dictionary_item,
-                "variables": {"id": "_".join([key, category, language]),
+                "variables": {"id": id or "_".join([key, category, language]),
                               "name": key,
                               "key": key,
                               "partOfSpeech": category,
