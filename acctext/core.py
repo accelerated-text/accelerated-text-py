@@ -7,9 +7,7 @@ import time
 from urllib.parse import urljoin
 from typing import Dict, Iterable, List, Any, Callable
 from collections import OrderedDict
-from acctext.graphql import (create_dictionary_item, create_document_plan, delete_dictionary_item,
-                             delete_document_plan, dictionary, document_plan, document_plans, get_dictionary_item)
-from acctext.transforms import dictionary_item
+from acctext import graphql, transforms
 
 
 class AcceleratedText:
@@ -98,7 +96,7 @@ class AcceleratedText:
         if not attributes:
             attributes = {}
         body = {"operationName": "createDictionaryItem",
-                "query": create_dictionary_item,
+                "query": graphql.create_dictionary_item,
                 "variables": {"id": id or "_".join([key, category, language]),
                               "name": key,
                               "key": key,
@@ -106,55 +104,55 @@ class AcceleratedText:
                               "forms": forms,
                               "language": language,
                               "attributes": [{"name": k, "value": v} for k, v in attributes.items()]}}
-        return self._graphql(body, transform=dictionary_item)
+        return self._graphql(body, transform=transforms.dictionary_item)
 
     def get_dictionary_item(self, id: str):
         body = {"operationName": "getDictionaryItem",
-                "query": get_dictionary_item,
+                "query": graphql.get_dictionary_item,
                 "variables": {"dictionaryItemId": id}}
-        return self._graphql(body, transform=dictionary_item)
+        return self._graphql(body, transform=transforms.dictionary_item)
 
     def delete_dictionary_item(self, id):
         body = {"operationName": "deleteDictionaryItem",
-                "query": delete_dictionary_item,
+                "query": graphql.delete_dictionary_item,
                 "variables": {"id": id}}
         return self._graphql(body)
 
     def list_dictionary_items(self):
         body = {"operationName": "dictionary",
-                "query": dictionary}
-        return self._graphql(body, transform=lambda x: [dictionary_item(item) for item in x['items']])
+                "query": graphql.dictionary}
+        return self._graphql(body, transform=lambda x: [transforms.dictionary_item(item) for item in x['items']])
 
     def get_document_plan(self, id: str = None, name: str = None):
         body = {"operationName": "documentPlan",
-                "query": document_plan,
+                "query": graphql.document_plan,
                 "variables": {"id": id,
                               "name": name}}
-        return self._graphql(body)
+        return self._graphql(body, transform=transforms.document_plan)
 
     def list_document_plans(self, kind: str = None, offset: int = 0, limit: int = 10000):
         body = {"operationName": "documentPlans",
-                "query": document_plans,
+                "query": graphql.document_plans,
                 "variables": {"offset": offset,
                               "limit": limit,
                               "kind": kind}}
-        return self._graphql(body)
+        return self._graphql(body, transform=lambda x: [transforms.document_plan(dp) for dp in x['items']])
 
     def create_document_plan(self, id: str, uid: str, name: str, kind: str, examples: List[str],
-                             blockly_xml: str, document_plan: str):
+                             blocklyXml: str, documentPlan: Dict):
         body = {"operationName": "createDocumentPlan",
-                "query": create_document_plan,
+                "query": graphql.create_document_plan,
                 "variables": {"id": id,
                               "uid": uid,
                               "name": name,
                               "kind": kind,
                               "examples": examples,
-                              "blocklyXml": blockly_xml,
-                              "documentPlan": document_plan}}
-        return self._graphql(body)
+                              "blocklyXml": blocklyXml,
+                              "documentPlan": json.dumps(documentPlan)}}
+        return self._graphql(body, transform=transforms.document_plan)
 
     def delete_document_plan(self, id: str):
         body = {"operationName": "deleteDocumentPlan",
-                "query": delete_document_plan,
+                "query": graphql.delete_document_plan,
                 "variables": {"id": id}}
         return self._graphql(body)
