@@ -30,10 +30,17 @@ class AcceleratedText:
         r = requests.get(urljoin(self.host, 'status'))
         return self._response(r)
 
-    def upload_data(self, path: str):
+    def upload_data_file(self, path: str):
         filename = os.path.split(path)[-1]
         with open(path, 'rb') as file:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
+        return self._response(r)
+
+    def delete_data_file(self, id: str):
+        body = {"id": id}
+        r = requests.delete(urljoin(self.host, f'accelerated-text-data-files/'),
+                            headers={"Content-Type": "application/json"},
+                            data=json.dumps(body))
         return self._response(r)
 
     def _graphql(self, body: dict, transform: Callable = None):
