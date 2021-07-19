@@ -22,6 +22,20 @@ class AcceleratedText:
         else:
             return r
 
+    def _graphql(self, body: dict, transform: Callable = None):
+        r = requests.post(urljoin(self.host, '_graphql'),
+                          headers={"Content-Type": "application/json"},
+                          data=json.dumps(body))
+        r = self._response(r)
+        if type(r) == requests.Response:
+            return r
+        elif 'errors' in r:
+            raise Exception(r['errors'])
+        else:
+            keys = list(r['data'].keys())
+            data = r['data'][keys[0]] if len(keys) == 1 else r['data']
+            return transform(data) if transform else data
+
     def health(self):
         r = requests.get(urljoin(self.host, 'health'))
         return self._response(r)
@@ -42,20 +56,6 @@ class AcceleratedText:
                             headers={"Content-Type": "application/json"},
                             data=json.dumps(body))
         return self._response(r)
-
-    def _graphql(self, body: dict, transform: Callable = None):
-        r = requests.post(urljoin(self.host, '_graphql'),
-                          headers={"Content-Type": "application/json"},
-                          data=json.dumps(body))
-        r = self._response(r)
-        if type(r) == requests.Response:
-            return r
-        elif 'errors' in r:
-            raise Exception(r['errors'])
-        else:
-            keys = list(r['data'].keys())
-            data = r['data'][keys[0]] if len(keys) == 1 else r['data']
-            return transform(data) if transform else data
 
     def generate(self, document_plan_name: str, data: Dict[str, Any], reader_model: Dict[str, bool] = None):
         body = {"documentPlanName": document_plan_name,
