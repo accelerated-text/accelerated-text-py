@@ -50,7 +50,7 @@ class AcceleratedText:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
         return self._response(r)
 
-    def get_data_file(self, id, record_offset: int = 0, record_limit: int = 1000000000):
+    def get_data_file(self, id: str, record_offset: int = 0, record_limit: int = 1000000000):
         body = {"operationName": "getDataFile",
                 "query": graphql.get_data_file,
                 "variables": {"id": id,
@@ -136,7 +136,7 @@ class AcceleratedText:
                 "variables": {"dictionaryItemId": id}}
         return self._graphql(body, transform=transforms.dictionary_item)
 
-    def delete_dictionary_item(self, id):
+    def delete_dictionary_item(self, id: str):
         body = {"operationName": "deleteDictionaryItem",
                 "query": graphql.delete_dictionary_item,
                 "variables": {"id": id}}
