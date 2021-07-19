@@ -60,10 +60,10 @@ class AcceleratedText:
                           data=json.dumps(body))
         return self._response(r)
 
-    def generate_bulk(self, document_plan_name: str, data_rows: Iterable[Dict[str, Any]],
-                      reader_model: Dict[str, bool] = None, result_format: str = 'raw'):
+    def generate_bulk(self, document_plan_name: str, data: Iterable[Dict[str, Any]],
+                      reader_model: Dict[str, bool] = None):
         body = {"documentPlanName": document_plan_name,
-                "dataRows": OrderedDict([(str(uuid.uuid4()), row) for row in data_rows]),
+                "dataRows": OrderedDict([(str(uuid.uuid4()), row) for row in data]),
                 "readerFlagValues": reader_model or self.default_reader_model}
         r = requests.post(urljoin(self.host, 'nlg/_bulk/'),
                           headers={"Content-Type": "application/json"},
@@ -71,7 +71,7 @@ class AcceleratedText:
         results = self._response(r)
         if type(results) == requests.Response:
             return results
-        return (self.get_result(result_id, format=result_format) for result_id in body['dataRows'].keys())
+        return (self.get_result(result_id) for result_id in body['dataRows'].keys())
 
     def get_result(self, id: str, format: str = 'raw'):
         result = None
