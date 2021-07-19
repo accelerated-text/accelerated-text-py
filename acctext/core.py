@@ -43,8 +43,8 @@ class AcceleratedText:
         r = self._response(r)
         if type(r) == requests.Response:
             return r
-        elif 'error' in r:
-            raise Exception(r['error'])
+        elif 'errors' in r:
+            raise Exception(r['errors'])
         else:
             keys = list(r['data'].keys())
             data = r['data'][keys[0]] if len(keys) == 1 else r['data']
