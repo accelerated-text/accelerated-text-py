@@ -52,14 +52,15 @@ class AcceleratedText:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
         return self._response(r)
 
-    def create_data_file(self, filename: str, content: Iterable[Iterable[Any]]):
+    def create_data_file(self, filename: str, header: Iterable[str], rows: Iterable[Iterable[Any]], id: str = None):
         output = io.StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-        for row in content:
+        writer.writerow(header)
+        for row in rows:
             writer.writerow(row)
         body = {"operationName": "createDataFile",
                 "query": graphql.create_data_file,
-                "variables": {"id": filename,
+                "variables": {"id": id or filename,
                               "filename": filename,
                               "content": output.getvalue()}}
         return self._graphql(body)
