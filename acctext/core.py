@@ -13,7 +13,7 @@ from acctext import graphql, transforms
 
 
 class AcceleratedText:
-    default_reader_model = {"Eng": True}
+    default_reader_model = ["Eng"]
 
     def __init__(self, host: str = 'http://127.0.0.1:3001'):
         self.host = host
@@ -89,10 +89,10 @@ class AcceleratedText:
                             data=json.dumps(body))
         return self._response(r)
 
-    def generate(self, document_plan_name: str, data: Dict[str, Any], reader_model: Dict[str, bool] = None):
+    def generate(self, document_plan_name: str, data: Dict[str, Any], reader_model: Iterable[str] = None):
         body = {"documentPlanName": document_plan_name,
                 "dataRow": data,
-                "readerFlagValues": reader_model or self.default_reader_model,
+                "readerFlagValues": {reader: True for reader in reader_model or self.default_reader_model},
                 "async": False}
         r = requests.post(urljoin(self.host, 'nlg/'),
                           headers={"Content-Type": "application/json"},
@@ -100,10 +100,10 @@ class AcceleratedText:
         return self._response(r)
 
     def generate_bulk(self, document_plan_name: str, data: Iterable[Dict[str, Any]],
-                      reader_model: Dict[str, bool] = None):
+                      reader_model: Iterable[str] = None):
         body = {"documentPlanName": document_plan_name,
                 "dataRows": OrderedDict([(str(uuid.uuid4()), row) for row in data]),
-                "readerFlagValues": reader_model or self.default_reader_model}
+                "readerFlagValues": {reader: True for reader in reader_model or self.default_reader_model}}
         r = requests.post(urljoin(self.host, 'nlg/_bulk/'),
                           headers={"Content-Type": "application/json"},
                           data=json.dumps(body))
