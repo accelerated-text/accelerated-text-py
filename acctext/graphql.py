@@ -69,6 +69,13 @@ get_data_file = """query getDataFile($id: ID!, $recordOffset: Int, $recordLimit:
 }
 """
 
+create_data_file = """mutation createDataFile($id: ID, $filename: String, $content: String) {
+  createDataFile(id: $id, filename: $filename, content: $content) {
+    id
+  }
+}
+"""
+
 list_data_files = """query listDataFiles(
   $offset: Int
   $limit: Int

@@ -3,6 +3,8 @@ import json
 import os
 import uuid
 import time
+import io
+import csv
 
 from urllib.parse import urljoin
 from typing import Dict, Iterable, List, Any, Callable
@@ -49,6 +51,18 @@ class AcceleratedText:
         with open(path, 'rb') as file:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
         return self._response(r)
+
+    def create_data_file(self, filename: str, content: Iterable[Iterable[Any]]):
+        output = io.StringIO()
+        writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+        for row in content:
+            writer.writerow(row)
+        body = {"operationName": "createDataFile",
+                "query": graphql.create_data_file,
+                "variables": {"id": filename,
+                              "filename": filename,
+                              "content": output.getvalue()}}
+        return self._graphql(body)
 
     def get_data_file(self, id: str, record_offset: int = 0, record_limit: int = 1000000000):
         body = {"operationName": "getDataFile",
