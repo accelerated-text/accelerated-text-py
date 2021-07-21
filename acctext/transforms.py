@@ -48,7 +48,8 @@ def data_file_to_csv(x: Dict) -> str:
 
 
 def data_file_from_csv(filename: str, x: bytes) -> Dict:
-    rows = list(csv.reader(x, delimiter=','))
+    f = io.StringIO(x.decode('utf-8'))
+    rows = list(csv.reader(f, delimiter=','))
     return {"id": filename,
             "filename": filename,
             "header": rows[0],
