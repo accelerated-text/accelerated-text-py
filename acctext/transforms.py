@@ -15,6 +15,15 @@ def dictionary_item(x: Dict) -> Dict:
             "attributes": {attr.get('name'): attr.get('value') for attr in x.get('attributes', [])}}
 
 
+def dictionary_item_from_edn(x: Dict) -> Dict:
+    return {"id": x['id'],
+            "key": x['key'],
+            "forms": list(x['forms']),
+            "category": x['category'],
+            "language": x['language'],
+            "attributes": dict(x['attributes'])}
+
+
 def document_plan(x: Dict) -> Dict:
     x['documentPlan'] = json.loads(x['documentPlan'])
     return x
@@ -38,9 +47,8 @@ def data_file_to_csv(x: Dict) -> str:
     return output.getvalue()
 
 
-def data_file_from_csv(filename: str, x: str) -> Dict:
-    f = io.StringIO(x)
-    rows = list(csv.reader(f, delimiter=','))
+def data_file_from_csv(filename: str, x: bytes) -> Dict:
+    rows = list(csv.reader(x, delimiter=','))
     return {"id": filename,
             "filename": filename,
             "header": rows[0],

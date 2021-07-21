@@ -246,7 +246,7 @@ class AcceleratedText:
                 "query": graphql.reader_flags}
         return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
 
-    def clear_state(self) -> bool:
+    def clear_state(self):
         for lang in self.list_languages():
             if lang['id'] in self.default_reader_model:
                 self.add_language(lang['id'], lang['name'], lang['flag'], True)
@@ -263,9 +263,10 @@ class AcceleratedText:
             self.delete_data_file(data_file['id'])
         for document_plan in self.list_document_plans():
             self.delete_document_plan(document_plan['id'])
-        return True
 
-    def export_state(self, output_path: str):
+    def export_state(self, output_path: str, overwrite: bool = True):
+        if overwrite and os.path.exists(output_path):
+            os.remove(output_path)
         with ZipFile(output_path, 'a') as file:
             languages = [transforms.reader_flag_to_edn(language) for language in self.list_languages()]
             file.writestr('config/languages.edn', edn_format.dumps(languages, indent=4))
@@ -277,3 +278,24 @@ class AcceleratedText:
             file.writestr('dictionary/dictionary.edn', edn_format.dumps(dictionary, indent=4))
             for data_file in self.list_data_files():
                 file.writestr(f'data-files/{data_file["filename"]}', transforms.data_file_to_csv(data_file))
+
+    def restore_state(self, path: str):
+        with ZipFile(path, 'r') as file:
+            file_list = list(map(lambda x: x.filename, file.filelist))
+            with file.open('config/languages.edn') as languages:
+                for language in edn_format.loads(languages.read()):
+                    self.add_language(**transforms.reader_flag_from_edn(language))
+            with file.open('config/readers.edn') as readers:
+                for reader in edn_format.loads(readers.read()):
+                    self.create_reader(**transforms.reader_flag_from_edn(reader))
+            for document_plan in filter(lambda x: x.startswith('document-plans'), file_list):
+                with file.open(document_plan) as dp:
+                    self.create_document_plan(**json.load(dp))
+            for dictionary in filter(lambda x: x.startswith('dictionary'), file_list):
+                with file.open(dictionary) as d:
+                    for dict_item in edn_format.loads(d.read()):
+                        self.create_dictionary_item(**transforms.dictionary_item_from_edn(dict_item))
+            for data_file in filter(lambda x: x.startswith('data-files'), file_list):
+                with file.open(data_file) as df:
+                    filename = os.path.split(data_file)[-1]
+                    self.create_data_file(**transforms.data_file_from_csv(filename, df.read()))
