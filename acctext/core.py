@@ -3,12 +3,12 @@ import json
 import os
 import uuid
 import time
-import io
-import csv
+import edn_format
 
 from urllib.parse import urljoin
 from typing import Dict, Iterable, List, Any, Callable
 from collections import OrderedDict
+from zipfile import ZipFile
 
 from acctext import graphql, transforms
 
@@ -53,17 +53,13 @@ class AcceleratedText:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
         return self._response(r)
 
-    def create_data_file(self, filename: str, header: Iterable[str], rows: Iterable[Iterable[Any]], id: str = None) -> Dict:
-        output = io.StringIO()
-        writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-        writer.writerow(header)
-        for row in rows:
-            writer.writerow(row)
+    def create_data_file(self, filename: str, header: Iterable[str], rows: Iterable[Iterable[Any]],
+                         id: str = None) -> Dict:
         body = {"operationName": "createDataFile",
                 "query": graphql.create_data_file,
                 "variables": {"id": id or filename,
                               "filename": filename,
-                              "content": output.getvalue()}}
+                              "content": transforms.data_file_to_csv({"header": header, "rows": rows})}}
         return self._graphql(body)
 
     def get_data_file(self, id: str, record_offset: int = 0, record_limit: int = 1000000000) -> Dict:
@@ -74,7 +70,8 @@ class AcceleratedText:
                               "recordLimit": record_limit}}
         return self._graphql(body, transform=transforms.data_file)
 
-    def list_data_files(self, offset: int = 0, limit: int = 1000, record_offset=0, record_limit: int = 1000000000) -> Iterable[Dict]:
+    def list_data_files(self, offset: int = 0, limit: int = 1000, record_offset=0,
+                        record_limit: int = 1000000000) -> Iterable[Dict]:
         body = {"operationName": "listDataFiles",
                 "query": graphql.list_data_files,
                 "variables": {"offset": offset,
@@ -251,12 +248,12 @@ class AcceleratedText:
 
     def clear_state(self) -> bool:
         for lang in self.list_languages():
-            if lang in self.default_reader_model:
+            if lang['id'] in self.default_reader_model:
                 self.add_language(lang['id'], lang['name'], lang['flag'], True)
             else:
                 self.delete_language(lang['id'])
         for reader in self.list_readers():
-            if reader in self.default_reader_model:
+            if reader['id'] in self.default_reader_model:
                 self.create_reader(reader['id'], reader['name'], reader['flag'], True)
             else:
                 self.delete_reader(reader['id'])
@@ -267,3 +264,16 @@ class AcceleratedText:
         for document_plan in self.list_document_plans():
             self.delete_document_plan(document_plan['id'])
         return True
+
+    def export_state(self, output_path: str):
+        with ZipFile(output_path, 'a') as file:
+            languages = [transforms.reader_flag_to_edn(language) for language in self.list_languages()]
+            file.writestr('config/languages.edn', edn_format.dumps(languages, indent=4))
+            readers = [transforms.reader_flag_to_edn(reader) for reader in self.list_readers()]
+            file.writestr('config/readers.edn', edn_format.dumps(readers, indent=4))
+            for document_plan in self.list_document_plans():
+                file.writestr(f'document-plans/{document_plan["id"]}.json', json.dumps(document_plan, indent=4))
+            dictionary = self.list_dictionary_items()
+            file.writestr('dictionary/dictionary.edn', edn_format.dumps(dictionary, indent=4))
+            for data_file in self.list_data_files():
+                file.writestr(f'data-files/{data_file["filename"]}', transforms.data_file_to_csv(data_file))
