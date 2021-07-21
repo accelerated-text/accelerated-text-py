@@ -183,3 +183,97 @@ get_dictionary_item = """query dictionaryItem(
     }
 }
 """
+
+reader_flag = """query readerFlag($id: ID!) {
+  readerFlag(id: $id) {
+    id
+    name
+    flag
+    defaultUsage
+  }
+}
+"""
+
+create_reader_flag = """mutation createReaderFlag(
+  $id: ID!
+  $name: String!
+  $flag: String!
+  $defaultUsage: Usage!
+) {
+  createReaderFlag(
+    id: $id
+    name: $name
+    flag: $flag
+    defaultUsage: $defaultUsage
+  ) {
+    id
+    name
+    flag
+    defaultUsage
+  }
+}
+"""
+
+delete_reader_flag = """mutation deleteReaderFlag($id: ID!) {
+  deleteReaderFlag(id: $id)
+}
+"""
+
+reader_flags = """query readerFlags {
+  readerFlags {
+    flags {
+      id
+      name
+      flag
+      defaultUsage
+    }
+  }
+}
+"""
+
+language = """query language($id: Language!) {
+  language(id: $id) {
+    id
+    name
+    flag
+    defaultUsage
+  }
+}
+"""
+
+add_language = """mutation addLanguage(
+  $id: Language!
+  $name: String!
+  $flag: String
+  $defaultUsage: Usage!
+) {
+  addLanguage(
+    id: $id
+    name: $name
+    flag: $flag
+    defaultUsage: $defaultUsage
+  ) {
+    id
+    name
+    flag
+    defaultUsage
+  }
+}
+"""
+
+delete_language = """mutation deleteLanguage($id: Language!) {
+  deleteLanguage(id: $id)
+}
+"""
+
+languages = """query languages {
+  languages {
+    flags {
+      id
+      name
+      flag
+      defaultUsage
+    }
+  }
+}
+"""

@@ -33,3 +33,13 @@ def data_file(x: Dict):
                 "rows": [[field['value'] for field in sorted(record['fields'],
                                                              key=lambda f: x['fieldNames'].index(f['fieldName']))]
                          for record in x['records']]}
+
+
+def reader_flag(x: Dict):
+    if not x:
+        return
+    else:
+        return {'id': x['id'],
+                'name': x['name'],
+                'flag': x['flag'],
+                'default': x['defaultUsage'] == 'YES'}

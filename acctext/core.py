@@ -195,3 +195,55 @@ class AcceleratedText:
                 "query": graphql.delete_document_plan,
                 "variables": {"id": id}}
         return self._graphql(body)
+
+    def get_language(self, id: str):
+        body = {"operationName": "language",
+                "query": graphql.language,
+                "variables": {"id": id}}
+        return self._graphql(body, transform=transforms.reader_flag)
+
+    def add_language(self, id: str, name: str, flag: str = None, default: bool = False):
+        body = {"operationName": "addLanguage",
+                "query": graphql.add_language,
+                "variables": {"id": id,
+                              "name": name,
+                              "flag": flag,
+                              "defaultUsage": "YES" if default else "NO"}}
+        return self._graphql(body, transform=transforms.reader_flag)
+
+    def delete_language(self, id: str):
+        body = {"operationName": "deleteLanguage",
+                "query": graphql.delete_language,
+                "variables": {"id": id}}
+        return self._graphql(body)
+
+    def list_languages(self):
+        body = {"operationName": "languages",
+                "query": graphql.languages}
+        return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
+
+    def get_reader(self, id: str):
+        body = {"operationName": "readerFlag",
+                "query": graphql.reader_flag,
+                "variables": {"id": id}}
+        return self._graphql(body, transform=transforms.reader_flag)
+
+    def create_reader(self, id: str, name: str, flag: str, default: bool = False):
+        body = {"operationName": "createReaderFlag",
+                "query": graphql.create_reader_flag,
+                "variables": {"id": id,
+                              "name": name,
+                              "flag": flag,
+                              "defaultUsage": "YES" if default else "NO"}}
+        return self._graphql(body, transform=transforms.reader_flag)
+
+    def delete_reader(self, id: str):
+        body = {"operationName": "deleteReaderFlag",
+                "query": graphql.delete_reader_flag,
+                "variables": {"id": id}}
+        return self._graphql(body)
+
+    def list_readers(self):
+        body = {"operationName": "readerFlags",
+                "query": graphql.reader_flags}
+        return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
