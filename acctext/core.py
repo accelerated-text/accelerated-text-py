@@ -9,6 +9,7 @@ import csv
 from urllib.parse import urljoin
 from typing import Dict, Iterable, List, Any, Callable
 from collections import OrderedDict
+
 from acctext import graphql, transforms
 
 
@@ -38,21 +39,21 @@ class AcceleratedText:
             data = r['data'][keys[0]] if len(keys) == 1 else r['data']
             return transform(data) if transform else data
 
-    def health(self):
+    def health(self) -> Dict:
         r = requests.get(urljoin(self.host, 'health'))
         return self._response(r)
 
-    def status(self):
+    def status(self) -> Dict:
         r = requests.get(urljoin(self.host, 'status'))
         return self._response(r)
 
-    def upload_data_file(self, path: str):
+    def upload_data_file(self, path: str) -> Dict:
         filename = os.path.split(path)[-1]
         with open(path, 'rb') as file:
             r = requests.post(urljoin(self.host, 'accelerated-text-data-files/'), files={'file': (filename, file)})
         return self._response(r)
 
-    def create_data_file(self, filename: str, header: Iterable[str], rows: Iterable[Iterable[Any]], id: str = None):
+    def create_data_file(self, filename: str, header: Iterable[str], rows: Iterable[Iterable[Any]], id: str = None) -> Dict:
         output = io.StringIO()
         writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
         writer.writerow(header)
@@ -65,7 +66,7 @@ class AcceleratedText:
                               "content": output.getvalue()}}
         return self._graphql(body)
 
-    def get_data_file(self, id: str, record_offset: int = 0, record_limit: int = 1000000000):
+    def get_data_file(self, id: str, record_offset: int = 0, record_limit: int = 1000000000) -> Dict:
         body = {"operationName": "getDataFile",
                 "query": graphql.get_data_file,
                 "variables": {"id": id,
@@ -73,7 +74,7 @@ class AcceleratedText:
                               "recordLimit": record_limit}}
         return self._graphql(body, transform=transforms.data_file)
 
-    def list_data_files(self, offset: int = 0, limit: int = 1000, record_offset=0, record_limit: int = 1000000000):
+    def list_data_files(self, offset: int = 0, limit: int = 1000, record_offset=0, record_limit: int = 1000000000) -> Iterable[Dict]:
         body = {"operationName": "listDataFiles",
                 "query": graphql.list_data_files,
                 "variables": {"offset": offset,
@@ -82,14 +83,14 @@ class AcceleratedText:
                               "recordLimit": record_limit}}
         return self._graphql(body, transform=lambda x: [transforms.data_file(f) for f in x['dataFiles']])
 
-    def delete_data_file(self, id: str):
+    def delete_data_file(self, id: str) -> Dict:
         body = {"id": id}
         r = requests.delete(urljoin(self.host, f'accelerated-text-data-files/'),
                             headers={"Content-Type": "application/json"},
                             data=json.dumps(body))
         return self._response(r)
 
-    def generate(self, document_plan_name: str, data: Dict[str, Any], reader_model: Iterable[str] = None):
+    def generate(self, document_plan_name: str, data: Dict[str, Any], reader_model: Iterable[str] = None) -> Dict:
         body = {"documentPlanName": document_plan_name,
                 "dataRow": data,
                 "readerFlagValues": {reader: True for reader in reader_model or self.default_reader_model},
@@ -100,7 +101,7 @@ class AcceleratedText:
         return self._response(r)
 
     def generate_bulk(self, document_plan_name: str, data: Iterable[Dict[str, Any]],
-                      reader_model: Iterable[str] = None):
+                      reader_model: Iterable[str] = None) -> Iterable[Dict]:
         body = {"documentPlanName": document_plan_name,
                 "dataRows": OrderedDict([(str(uuid.uuid4()), row) for row in data]),
                 "readerFlagValues": {reader: True for reader in reader_model or self.default_reader_model}}
@@ -112,7 +113,7 @@ class AcceleratedText:
             return results
         return (self.get_result(result_id) for result_id in body['dataRows'].keys())
 
-    def get_result(self, id: str, format: str = 'raw'):
+    def get_result(self, id: str, format: str = 'raw') -> Dict:
         result = None
         ready = False
         while not ready:
@@ -126,12 +127,12 @@ class AcceleratedText:
             time.sleep(0.01)
         return result
 
-    def delete_result(self, id: str):
+    def delete_result(self, id: str) -> Dict:
         r = requests.delete(urljoin(self.host, f'nlg/{id}'))
         return self._response(r)
 
-    def create_dictionary_item(self, key: str, category: str, forms: List[str],
-                               id: str = None, language: str = "Eng", attributes: Dict[str, Any] = None):
+    def create_dictionary_item(self, key: str, category: str, forms: List[str], id: str = None,
+                               language: str = "Eng", attributes: Dict[str, Any] = None) -> Dict:
         if not attributes:
             attributes = {}
         body = {"operationName": "createDictionaryItem",
@@ -145,31 +146,31 @@ class AcceleratedText:
                               "attributes": [{"name": k, "value": v} for k, v in attributes.items()]}}
         return self._graphql(body, transform=transforms.dictionary_item)
 
-    def get_dictionary_item(self, id: str):
+    def get_dictionary_item(self, id: str) -> Dict:
         body = {"operationName": "getDictionaryItem",
                 "query": graphql.get_dictionary_item,
                 "variables": {"dictionaryItemId": id}}
         return self._graphql(body, transform=transforms.dictionary_item)
 
-    def delete_dictionary_item(self, id: str):
+    def delete_dictionary_item(self, id: str) -> bool:
         body = {"operationName": "deleteDictionaryItem",
                 "query": graphql.delete_dictionary_item,
                 "variables": {"id": id}}
         return self._graphql(body)
 
-    def list_dictionary_items(self):
+    def list_dictionary_items(self) -> Iterable[Dict]:
         body = {"operationName": "dictionary",
                 "query": graphql.dictionary}
         return self._graphql(body, transform=lambda x: [transforms.dictionary_item(item) for item in x['items']])
 
-    def get_document_plan(self, id: str = None, name: str = None):
+    def get_document_plan(self, id: str = None, name: str = None) -> Dict:
         body = {"operationName": "documentPlan",
                 "query": graphql.document_plan,
                 "variables": {"id": id,
                               "name": name}}
         return self._graphql(body, transform=transforms.document_plan)
 
-    def list_document_plans(self, kind: str = None, offset: int = 0, limit: int = 10000):
+    def list_document_plans(self, kind: str = None, offset: int = 0, limit: int = 10000) -> Iterable[Dict]:
         body = {"operationName": "documentPlans",
                 "query": graphql.document_plans,
                 "variables": {"offset": offset,
@@ -178,7 +179,7 @@ class AcceleratedText:
         return self._graphql(body, transform=lambda x: [transforms.document_plan(dp) for dp in x['items']])
 
     def create_document_plan(self, id: str, uid: str, name: str, kind: str, examples: List[str],
-                             blocklyXml: str, documentPlan: Dict):
+                             blocklyXml: str, documentPlan: Dict) -> Dict:
         body = {"operationName": "createDocumentPlan",
                 "query": graphql.create_document_plan,
                 "variables": {"id": id,
@@ -190,19 +191,19 @@ class AcceleratedText:
                               "documentPlan": json.dumps(documentPlan)}}
         return self._graphql(body, transform=transforms.document_plan)
 
-    def delete_document_plan(self, id: str):
+    def delete_document_plan(self, id: str) -> bool:
         body = {"operationName": "deleteDocumentPlan",
                 "query": graphql.delete_document_plan,
                 "variables": {"id": id}}
         return self._graphql(body)
 
-    def get_language(self, id: str):
+    def get_language(self, id: str) -> Dict:
         body = {"operationName": "language",
                 "query": graphql.language,
                 "variables": {"id": id}}
         return self._graphql(body, transform=transforms.reader_flag)
 
-    def add_language(self, id: str, name: str, flag: str = None, default: bool = False):
+    def add_language(self, id: str, name: str, flag: str = None, default: bool = False) -> Dict:
         body = {"operationName": "addLanguage",
                 "query": graphql.add_language,
                 "variables": {"id": id,
@@ -211,24 +212,24 @@ class AcceleratedText:
                               "defaultUsage": "YES" if default else "NO"}}
         return self._graphql(body, transform=transforms.reader_flag)
 
-    def delete_language(self, id: str):
+    def delete_language(self, id: str) -> bool:
         body = {"operationName": "deleteLanguage",
                 "query": graphql.delete_language,
                 "variables": {"id": id}}
         return self._graphql(body)
 
-    def list_languages(self):
+    def list_languages(self) -> Iterable[Dict]:
         body = {"operationName": "languages",
                 "query": graphql.languages}
         return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
 
-    def get_reader(self, id: str):
+    def get_reader(self, id: str) -> Dict:
         body = {"operationName": "readerFlag",
                 "query": graphql.reader_flag,
                 "variables": {"id": id}}
         return self._graphql(body, transform=transforms.reader_flag)
 
-    def create_reader(self, id: str, name: str, flag: str, default: bool = False):
+    def create_reader(self, id: str, name: str, flag: str, default: bool = False) -> Dict:
         body = {"operationName": "createReaderFlag",
                 "query": graphql.create_reader_flag,
                 "variables": {"id": id,
@@ -237,13 +238,13 @@ class AcceleratedText:
                               "defaultUsage": "YES" if default else "NO"}}
         return self._graphql(body, transform=transforms.reader_flag)
 
-    def delete_reader(self, id: str):
+    def delete_reader(self, id: str) -> bool:
         body = {"operationName": "deleteReaderFlag",
                 "query": graphql.delete_reader_flag,
                 "variables": {"id": id}}
         return self._graphql(body)
 
-    def list_readers(self):
+    def list_readers(self) -> Iterable[Dict]:
         body = {"operationName": "readerFlags",
                 "query": graphql.reader_flags}
         return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
