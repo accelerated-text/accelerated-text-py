@@ -248,3 +248,22 @@ class AcceleratedText:
         body = {"operationName": "readerFlags",
                 "query": graphql.reader_flags}
         return self._graphql(body, transform=lambda x: [transforms.reader_flag(flag) for flag in x.get('flags', [])])
+
+    def clear_state(self) -> bool:
+        for lang in self.list_languages():
+            if lang in self.default_reader_model:
+                self.add_language(lang['id'], lang['name'], lang['flag'], True)
+            else:
+                self.delete_language(lang['id'])
+        for reader in self.list_readers():
+            if reader in self.default_reader_model:
+                self.create_reader(reader['id'], reader['name'], reader['flag'], True)
+            else:
+                self.delete_reader(reader['id'])
+        for dict_item in self.list_dictionary_items():
+            self.delete_dictionary_item(dict_item['id'])
+        for data_file in self.list_data_files():
+            self.delete_data_file(data_file['id'])
+        for document_plan in self.list_document_plans():
+            self.delete_document_plan(document_plan['id'])
+        return True
