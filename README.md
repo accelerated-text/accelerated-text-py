@@ -247,7 +247,8 @@ at.list_readers()
 
 Open Accelerated Text document plan editor ([http://127.0.0.1:8080](http://127.0.0.1:8080) by default) and create a new document plan named **"House description"**. More detailed instructions can be found in [documentation](https://accelerated-text.readthedocs.io/en/latest/first-steps/).
 
-<img align="left" src="https://raw.githubusercontent.com/tokenmill/accelerated-text-py/master/resources/house_description.png">
+![House description](https://raw.githubusercontent.com/tokenmill/accelerated-text-py/master/resources/house_description.png)
+
 
 #### Fetch single document plan
 
