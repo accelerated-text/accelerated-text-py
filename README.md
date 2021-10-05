@@ -1,4 +1,4 @@
-# Python wrapper for Accelerated Text
+# Natural Language Generation for Python using AcceleratedText
 
 ## Installation
 $ python -m pip install acctext
